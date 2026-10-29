@@ -1,0 +1,1311 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>坤查询系统</title>
+
+<style>
+:root {
+    --bg: #101116;
+    --panel: rgba(25, 30, 41, .88);
+    --card: rgba(30, 36, 49, .78);
+    --line: rgba(255, 255, 255, .09);
+    --text: #f3f5fa;
+    --sub: #9aa4b5;
+    --blue: #4da3ff;
+    --blue-soft: rgba(77, 163, 255, .14);
+    --green: #50d6a0;
+    --red: #ff7373;
+    --radius: 16px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    font-family: Inter, "PingFang SC", "Microsoft YaHei",
+                 system-ui, sans-serif;
+    background:
+        radial-gradient(circle at 0% 0%, #1a2435 0, transparent 32%),
+        radial-gradient(circle at 100% 35%, #21182e 0, transparent 28%),
+        var(--bg);
+}
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+    transition: background .18s, border-color .18s, opacity .18s;
+}
+
+button:disabled {
+    opacity: .38;
+    cursor: not-allowed;
+}
+
+button:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(13, 15, 21, .92);
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.top-inner {
+    max-width: 1500px;
+    margin: auto;
+    padding: 16px 24px;
+}
+
+.top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 16px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 19px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.logo-icon {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: var(--blue-soft);
+    font-size: 21px;
+}
+
+.header-note {
+    color: var(--sub);
+    font-size: 12px;
+}
+
+.search-controls {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 130px 130px auto auto;
+    gap: 10px;
+}
+
+.input {
+    width: 100%;
+    min-width: 0;
+    padding: 11px 13px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .045);
+    color: var(--text);
+    transition: border-color .2s, background .2s;
+}
+
+.input::placeholder {
+    color: #778295;
+}
+
+.input:focus {
+    border-color: var(--blue);
+    background: rgba(77, 163, 255, .055);
+}
+
+.btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    min-height: 42px;
+    padding: 10px 15px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .055);
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+    border-color: rgba(77, 163, 255, .6);
+    background: rgba(77, 163, 255, .12);
+}
+
+.btn-primary {
+    border-color: transparent;
+    background: #348ce5;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #4da3ff;
+}
+
+.toolbar-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.results-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    color: var(--sub);
+    font-size: 13px;
+}
+
+.results-summary strong {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 5px;
+    border-radius: 50%;
+    background: var(--green);
+}
+
+.page-tools {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.page-size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--sub);
+    font-size: 13px;
+}
+
+.page-size select {
+    width: 76px;
+    padding: 9px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: #202532;
+    color: var(--text);
+}
+
+.page-info {
+    min-width: 110px;
+    text-align: center;
+    color: var(--sub);
+    font-size: 13px;
+}
+
+.container {
+    max-width: 1500px;
+    margin: auto;
+    padding: 24px;
+}
+
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.section-heading h1 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 750;
+}
+
+.section-heading p {
+    margin: 5px 0 0;
+    color: var(--sub);
+    font-size: 12px;
+}
+
+#list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+    align-items: stretch;
+    gap: 16px;
+}
+
+.card {
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    transition: transform .18s, border-color .18s, background .18s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(77, 163, 255, .55);
+    background: rgba(34, 41, 56, .94);
+}
+/* 每张卡片的记忆链按钮 */
+.memory-chain-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    margin-top: 15px;
+    padding: 10px 12px;
+    border: 1px solid rgba(77, 163, 255, .42);
+    border-radius: 10px;
+    background: linear-gradient(
+        135deg,
+        rgba(77, 163, 255, .16),
+        rgba(143, 105, 255, .12)
+    );
+    color: #a9d4ff;
+    font-weight: 700;
+}
+
+.memory-chain-btn:hover {
+    border-color: var(--blue);
+    background: rgba(77, 163, 255, .24);
+    color: #fff;
+}
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.card-title {
+    min-width: 0;
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.65;
+    font-weight: 750;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.card-index {
+    flex-shrink: 0;
+    padding: 4px 7px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--sub);
+    font-size: 11px;
+}
+
+.price {
+    margin: 0 0 15px;
+    color: var(--green);
+    font-size: 24px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.price-label {
+    margin-right: 5px;
+    color: var(--sub);
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.price-null {
+    color: var(--sub);
+    font-size: 17px;
+}
+
+.location {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin-bottom: 15px;
+    color: var(--sub);
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.location-icon {
+    flex-shrink: 0;
+}
+
+.contact-list {
+    display: grid;
+    gap: 9px;
+    padding-top: 13px;
+    border-top: 1px solid var(--line);
+}
+
+.contact-row {
+    display: grid;
+    grid-template-columns: 65px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.contact-label {
+    padding-top: 3px;
+    color: var(--sub);
+}
+
+.contact-value {
+    min-width: 0;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    user-select: text;
+}
+
+.copy-btn {
+    padding: 4px 7px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, .035);
+    color: #b8d9ff;
+    font-size: 11px;
+}
+
+.copy-btn:hover {
+    background: var(--blue-soft);
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 260px;
+    padding: 30px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    color: var(--sub);
+    text-align: center;
+}
+
+.empty-icon {
+    margin-bottom: 12px;
+    font-size: 34px;
+}
+
+.empty-title {
+    margin-bottom: 7px;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.empty-description {
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.bottom-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.footer {
+    padding: 26px 10px 8px;
+    color: #657084;
+    font-size: 12px;
+    text-align: center;
+}
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    z-index: 100;
+    max-width: calc(100vw - 32px);
+    padding: 11px 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #252d3b;
+    color: white;
+    font-size: 13px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 10px);
+    transition: opacity .2s, transform .2s;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+.loading {
+    opacity: .6;
+    pointer-events: none;
+}
+
+@media (min-width: 1200px) {
+    .top-inner {
+        padding-left: 30px;
+        padding-right: 30px;
+    }
+}
+
+@media (max-width: 900px) {
+    .top-inner {
+        padding: 14px 16px;
+    }
+
+    .search-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .search-controls .keyword-input {
+        grid-column: 1 / -1;
+    }
+
+    .container {
+        padding: 18px 16px;
+    }
+}
+
+@media (max-width: 520px) {
+    .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .header-note {
+        margin-left: 48px;
+        margin-top: -8px;
+    }
+
+    .search-controls {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .search-controls .keyword-input {
+        grid-column: 1 / -1;
+    }
+
+    .input {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .search-controls .btn {
+        width: 100%;
+    }
+
+    .toolbar-bottom {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .page-tools {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .page-info {
+        min-width: 95px;
+    }
+
+    .container {
+        padding: 18px 12px;
+    }
+
+    #list {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .section-heading h1 {
+        font-size: 17px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="top-inner">
+
+        <div class="top-row">
+            <div>
+                <div class="logo">
+                    <span class="logo-icon">📦</span>
+                    <span>坤查询系统</span>
+
+<a href="/graph">坤链</a>
+
+                      </div>
+            </div>
+            <div class="header-note">本地数据库 · 快速检索</div>
+        </div>
+
+        <form id="searchForm" class="search-controls">
+            <input
+                id="kw"
+                class="input keyword-input"
+                type="search"
+                placeholder="搜索标题、地点、QQ、微信或电话..."
+                autocomplete="off"
+                aria-label="关键词"
+            >
+
+            <input
+                id="min_price"
+                class="input"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="最低价格"
+                aria-label="最低价格"
+            >
+
+            <input
+                id="max_price"
+                class="input"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="最高价格"
+                aria-label="最高价格"
+            >
+
+            <button id="searchBtn" class="btn btn-primary" type="submit">
+                🔎 搜索
+            </button>
+
+            <button id="resetBtn" class="btn" type="button">
+                ↺ 重置
+            </button>
+        </form>
+
+        <div class="toolbar-bottom" style="margin-top: 14px;">
+            <div class="results-summary">
+                <span><span class="status-dot"></span>本地查询</span>
+                <span id="resultSummary">等待查询</span>
+            </div>
+
+            <div class="page-tools">
+                <label class="page-size">
+                    每页
+                    <select id="pageSize" aria-label="每页显示数量">
+                        <option value="20">20</option>
+                        <option value="50" selected>50</option>
+                        <option value="100">100</option>
+                        <option value="200">200</option>
+                    </select>
+                    条
+                </label>
+
+                <button id="prevBtn" class="btn" type="button" disabled>
+                    ← 上一页
+                </button>
+
+                <span id="info" class="page-info">第 1 页</span>
+
+                <button id="nextBtn" class="btn" type="button" disabled>
+                    下一页 →
+                </button>
+            </div>
+        </div>
+
+    </div>
+</header>
+
+<main class="container">
+    <div class="section-heading">
+        <div>
+            <h1>查询结果</h1>
+            <p>支持关键词检索、价格筛选和联系方式复制</p>
+        </div>
+    </div>
+
+    <div id="list" aria-live="polite" aria-busy="false">
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-title">正在准备查询</div>
+            <div class="empty-description">请稍候……</div>
+        </div>
+    </div>
+
+    <div class="bottom-pagination">
+        <button id="bottomPrevBtn" class="btn" type="button" disabled>
+            ← 上一页
+        </button>
+        <span id="bottomInfo" class="page-info">第 1 页</span>
+        <button id="bottomNextBtn" class="btn" type="button" disabled>
+            下一页 →
+        </button>
+    </div>
+
+    <footer class="footer">
+        坤查询系统 · Flask + SQLite
+    </footer>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+// =========================
+// 状态
+// =========================
+const state = {
+    page: 1,
+    size: 50,
+    total: 0,
+    totalPages: 0,
+    loading: false,
+    requestId: 0,
+    controller: null
+};
+
+const $ = id => document.getElementById(id);
+
+let toastTimer = null;
+
+
+// =========================
+// 提示消息
+// =========================
+function showToast(message) {
+    const toast = $("toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 1800);
+}
+
+
+// =========================
+// 空状态
+// =========================
+function showState(title, description, icon = "🔍") {
+    const list = $("list");
+
+    const box = document.createElement("div");
+    box.className = "empty-state";
+
+    const iconEl = document.createElement("div");
+    iconEl.className = "empty-icon";
+    iconEl.textContent = icon;
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "empty-title";
+    titleEl.textContent = title;
+
+    const descEl = document.createElement("div");
+    descEl.className = "empty-description";
+    descEl.textContent = description;
+
+    box.append(iconEl, titleEl, descEl);
+    list.replaceChildren(box);
+}
+
+
+// =========================
+// 分页状态
+// =========================
+function updatePagination() {
+    const totalPages = Math.max(1, state.totalPages || 1);
+
+    $("info").textContent =
+        `第 ${state.page} / ${totalPages} 页`;
+
+    $("bottomInfo").textContent =
+        `第 ${state.page} / ${totalPages} 页`;
+
+    $("resultSummary").textContent =
+        `共 ${state.total.toLocaleString("zh-CN")} 条记录`;
+
+    const prevDisabled = state.loading || state.page <= 1;
+    const nextDisabled =
+        state.loading ||
+        state.total === 0 ||
+        state.page >= totalPages;
+
+    $("prevBtn").disabled = prevDisabled;
+    $("bottomPrevBtn").disabled = prevDisabled;
+
+    $("nextBtn").disabled = nextDisabled;
+    $("bottomNextBtn").disabled = nextDisabled;
+
+    $("searchBtn").disabled = state.loading;
+    $("resetBtn").disabled = state.loading;
+    $("pageSize").disabled = state.loading;
+}
+
+
+// =========================
+// 加载状态
+// =========================
+function setLoading(loading) {
+    state.loading = loading;
+
+    $("list").setAttribute("aria-busy", String(loading));
+    $("list").classList.toggle("loading", loading);
+
+    updatePagination();
+}
+
+
+// =========================
+// 读取搜索条件
+// =========================
+function getFilters() {
+    return {
+        keyword: $("kw").value.trim(),
+        min_price: $("min_price").value.trim(),
+        max_price: $("max_price").value.trim()
+    };
+}
+
+
+// =========================
+// 前端参数验证
+// =========================
+function validateFilters(filters) {
+    if (filters.min_price !== "") {
+        const value = Number(filters.min_price);
+
+        if (!Number.isFinite(value) || value < 0) {
+            showToast("最低价格必须是非负数字");
+            $("min_price").focus();
+            return false;
+        }
+    }
+
+    if (filters.max_price !== "") {
+        const value = Number(filters.max_price);
+
+        if (!Number.isFinite(value) || value < 0) {
+            showToast("最高价格必须是非负数字");
+            $("max_price").focus();
+            return false;
+        }
+    }
+
+    if (
+        filters.min_price !== "" &&
+        filters.max_price !== "" &&
+        Number(filters.min_price) > Number(filters.max_price)
+    ) {
+        showToast("最低价格不能高于最高价格");
+        $("max_price").focus();
+        return false;
+    }
+
+    return true;
+}
+
+
+// =========================
+// 搜索
+// =========================
+function search() {
+    const filters = getFilters();
+
+    if (!validateFilters(filters)) {
+        return;
+    }
+
+    state.page = 1;
+    load();
+}
+
+
+// =========================
+// 加载数据
+// =========================
+async function load() {
+    const filters = getFilters();
+
+    if (!validateFilters(filters)) {
+        return;
+    }
+
+    // 给每次请求分配唯一编号，避免旧请求覆盖新结果
+    const requestId = ++state.requestId;
+
+    // 取消之前未完成的请求
+    if (state.controller) {
+        state.controller.abort();
+    }
+
+    const controller = new AbortController();
+    state.controller = controller;
+
+    const params = new URLSearchParams({
+        keyword: filters.keyword,
+        min_price: filters.min_price,
+        max_price: filters.max_price,
+        page: String(state.page),
+        size: String(state.size)
+    });
+
+    setLoading(true);
+    showState("正在查询", "正在读取数据库，请稍候……", "⏳");
+
+    try {
+        const response = await fetch(`/search?${params.toString()}`, {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            },
+            signal: controller.signal
+        });
+
+        // fetch 不会因为 HTTP 400 / 500 自动抛出异常
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.detail ||
+                result.error ||
+                `请求失败（HTTP ${response.status}）`
+            );
+        }
+
+        if (!result || !Array.isArray(result.data)) {
+            throw new Error("服务器返回的数据格式不正确");
+        }
+
+        // 只处理当前最新的请求
+        if (requestId !== state.requestId) {
+            return;
+        }
+
+        state.total = Number(result.total) || 0;
+        state.totalPages = Number(result.total_pages) ||
+            Math.ceil(state.total / state.size);
+
+        // 如果后端返回的页码超出范围，自动回到有效页
+        if (state.total > 0 && state.page > state.totalPages) {
+            state.page = Math.max(1, state.totalPages);
+            await load();
+            return;
+        }
+
+        if (state.total === 0) {
+            state.page = 1;
+            state.totalPages = 0;
+        }
+
+        display(result.data);
+
+    } catch (error) {
+        if (error.name === "AbortError") {
+            return;
+        }
+
+        if (requestId !== state.requestId) {
+            return;
+        }
+
+        console.error("查询失败：", error);
+
+        showState(
+            "查询失败",
+            error.message || "无法连接服务器，请确认 Flask 服务是否正常。",
+            "⚠️"
+        );
+
+        state.total = 0;
+        state.totalPages = 0;
+        updatePagination();
+
+    } finally {
+        // 不能让旧请求提前结束新请求的加载状态
+        if (requestId === state.requestId) {
+            state.controller = null;
+            setLoading(false);
+        }
+    }
+}
+
+
+// =========================
+// 安全创建文本节点
+// =========================
+function createTextElement(tag, className, text) {
+    const el = document.createElement(tag);
+    el.className = className;
+    el.textContent = text;
+    return el;
+}
+
+
+// =========================
+// 联系方式复制
+// =========================
+async function copyText(value, label) {
+    if (!value || value === "-") {
+        showToast("没有可复制的" + label);
+        return;
+    }
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(value);
+        } else {
+            // 兼容部分本地 HTTP 页面
+            const textarea = document.createElement("textarea");
+            textarea.value = value;
+            textarea.setAttribute("readonly", "");
+            textarea.style.position = "fixed";
+            textarea.style.left = "-9999px";
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            const success = document.execCommand("copy");
+            textarea.remove();
+
+            if (!success) {
+                throw new Error("复制失败");
+            }
+        }
+
+        showToast(label + "已复制");
+    } catch (error) {
+        console.error("复制失败：", error);
+        showToast("复制失败，请手动选择并复制");
+    }
+}
+
+
+// =========================
+// 创建联系方式行
+// =========================
+function createContactRow(label, value) {
+    const row = document.createElement("div");
+    row.className = "contact-row";
+
+    row.appendChild(
+        createTextElement("span", "contact-label", label)
+    );
+
+    row.appendChild(
+        createTextElement("span", "contact-value", value || "-")
+    );
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "copy-btn";
+    button.textContent = "复制";
+    button.setAttribute("aria-label", "复制" + label);
+
+    button.addEventListener("click", () => {
+        copyText(value, label);
+    });
+
+    row.appendChild(button);
+
+    return row;
+}
+
+
+// =========================
+// 创建卡片
+// =========================
+function createCard(item, index) {
+    const card = document.createElement("article");
+    card.className = "card";
+
+    // 标题区域
+    const header = document.createElement("div");
+    header.className = "card-header";
+
+    const title = createTextElement(
+        "h2",
+        "card-title",
+        item.title || "无标题"
+    );
+
+    const number = createTextElement(
+        "span",
+        "card-index",
+        `#${(state.page - 1) * state.size + index + 1}`
+    );
+
+    header.append(title, number);
+    card.appendChild(header);
+
+    // 价格区域
+    const price = document.createElement("div");
+    price.className = "price";
+
+    const priceLabel = createTextElement(
+        "span",
+        "price-label",
+        "价格"
+    );
+
+    let priceText = "-";
+
+    if (
+        item.price !== null &&
+        item.price !== undefined &&
+        item.price !== "" &&
+        Number.isFinite(Number(item.price))
+    ) {
+        priceText = "¥" + Number(item.price).toLocaleString(
+            "zh-CN",
+            { maximumFractionDigits: 2 }
+        );
+    }
+
+    const priceValue = createTextElement(
+        "span",
+        priceText === "-" ? "price-null" : "",
+        priceText
+    );
+
+    price.append(priceLabel, priceValue);
+    card.appendChild(price);
+
+    // 地点区域
+    const location = document.createElement("div");
+    location.className = "location";
+
+    location.append(
+        createTextElement("span", "location-icon", "📍"),
+        createTextElement("span", "", item.place || "未填写地点")
+    );
+
+    card.appendChild(location);
+
+    // 联系方式
+    const contacts = document.createElement("div");
+    contacts.className = "contact-list";
+
+    contacts.append(
+        createContactRow("电话", item.phone || ""),
+        createContactRow("微信", item.wechat || ""),
+        createContactRow("QQ", item.QQ || "")
+    );
+
+    card.appendChild(contacts);
+
+    // =========================
+    // 记忆链按钮
+    // =========================
+    const memoryBtn = document.createElement("button");
+
+    memoryBtn.type = "button";
+    memoryBtn.className = "memory-chain-btn";
+    memoryBtn.textContent = "⛓ 打开这条记忆链";
+
+    // 优先使用 QQ，其次微信、电话、地点
+    const relationPriority = [
+        ["QQ", item.QQ],
+        ["wechat", item.wechat],
+        ["phone", item.phone],
+        ["place", item.place]
+    ];
+
+    const relation = relationPriority.find(
+        ([field, value]) =>
+            value !== null &&
+            value !== undefined &&
+            String(value).trim() !== ""
+    );
+
+    memoryBtn.addEventListener("click", () => {
+        const params = new URLSearchParams();
+
+        if (relation) {
+            params.set("field", relation[0]);
+            params.set("value", String(relation[1]).trim());
+        } else if (item.title && String(item.title).trim()) {
+            // 没有联系方式时，使用标题搜索
+            params.set("keyword", String(item.title).trim());
+        } else {
+            showToast("没有可用于定位记忆链的关键数据");
+            return;
+        }
+
+        // 跳转到关系图谱，并传入关键数据
+        window.location.href = "/graph?" + params.toString();
+    });
+
+    card.appendChild(memoryBtn);
+
+    return card;
+}
+
+// =========================
+// 渲染结果
+// =========================
+function display(data) {
+    const list = $("list");
+
+    if (!data.length) {
+        showState(
+            "没有找到匹配记录",
+            "请尝试修改关键词或放宽价格区间。",
+            "📭"
+        );
+
+        updatePagination();
+        return;
+    }
+
+    // 先在内存中创建节点，再一次性加入页面
+    const fragment = document.createDocumentFragment();
+
+    data.forEach((item, index) => {
+        fragment.appendChild(createCard(item, index));
+    });
+
+    list.replaceChildren(fragment);
+
+    updatePagination();
+}
+
+
+// =========================
+// 翻页
+// =========================
+function goToPage(page) {
+    if (state.loading) {
+        return;
+    }
+
+    const totalPages = Math.max(1, state.totalPages);
+
+    if (page < 1 || page > totalPages || page === state.page) {
+        return;
+    }
+
+    state.page = page;
+    load();
+
+    // 翻页后回到结果区域
+    $("list").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+
+// =========================
+// 重置
+// =========================
+function resetFilters() {
+    $("kw").value = "";
+    $("min_price").value = "";
+    $("max_price").value = "";
+
+    state.page = 1;
+    load();
+}
+
+
+// =========================
+// 事件绑定
+// =========================
+$("searchForm").addEventListener("submit", event => {
+    event.preventDefault();
+    search();
+});
+
+$("resetBtn").addEventListener("click", resetFilters);
+
+$("prevBtn").addEventListener("click", () => {
+    goToPage(state.page - 1);
+});
+
+$("bottomPrevBtn").addEventListener("click", () => {
+    goToPage(state.page - 1);
+});
+
+$("nextBtn").addEventListener("click", () => {
+    goToPage(state.page + 1);
+});
+
+$("bottomNextBtn").addEventListener("click", () => {
+    goToPage(state.page + 1);
+});
+
+$("pageSize").addEventListener("change", event => {
+    const size = Number(event.target.value);
+
+    if (![20, 50, 100, 200].includes(size)) {
+        event.target.value = String(state.size);
+        return;
+    }
+
+    state.size = size;
+    state.page = 1;
+    load();
+});
+
+
+// =========================
+// 初始化
+// =========================
+document.addEventListener("DOMContentLoaded", () => {
+    state.size = Number($("pageSize").value) || 50;
+    load();
+});
+</script>
+
+</body>
+</html>

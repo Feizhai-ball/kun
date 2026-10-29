@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据库记忆链 · 坤关联图谱</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #070b14;
+  --panel: #0d1422;
+  --line: #1f3049;
+  --text: #e6f0ff;
+  --muted: #8ea3c1;
+  --cyan: #35d8ff;
+  --blue: #5e8cff;
+  --purple: #b68cff;
+  --green: #5ce1b6;
+  --orange: #ffbe6b;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: radial-gradient(ellipse at 50% -20%, #15284a 0%, var(--bg) 58%);
+  color: var(--text);
+  font: 14px/1.5 "Segoe UI", "Microsoft YaHei", sans-serif;
+  min-height: 100vh;
+}
+header {
+  min-height: 70px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #080e19dd;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(12px);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #2c7896;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: var(--cyan);
+  font-size: 22px;
+  box-shadow: 0 0 22px #22caff22;
+}
+h1 { font-size: 17px; margin: 0; font-weight: 700; }
+.sub { font-size: 12px; color: var(--muted); }
+a { color: var(--cyan); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  border: 1px solid #29435f;
+  background: #132239;
+  color: #dceaff;
+  padding: 9px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+  font: inherit;
+}
+.btn:hover { border-color: var(--cyan); background: #17314c; }
+.btn.primary { background: #0c617b; border-color: #1b9fbd; color: #fff; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+main { padding: 16px; max-width: 1800px; margin: auto; }
+.toolbar {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 12px;
+  background: #0b1320;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+}
+input {
+  background: #070e19;
+  color: var(--text);
+  border: 1px solid #263b56;
+  border-radius: 9px;
+  padding: 10px 12px;
+  outline: none;
+  font: inherit;
+  min-width: 190px;
+}
+input:focus { border-color: var(--cyan); }
+.status { color: var(--muted); font-size: 12px; margin-left: auto; }
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 12px;
+}
+.graphbox {
+  height: calc(100vh - 190px);
+  min-height: 520px;
+  position: relative;
+  background: linear-gradient(135deg, #09111f, #070c15);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+canvas { width: 100%; height: 100%; display: block; cursor: grab; }
+canvas:active { cursor: grabbing; }
+.legend {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  display: flex;
+  gap: 13px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  background: #07101cdd;
+  border: 1px solid #20334b;
+  border-radius: 9px;
+  color: var(--muted);
+  font-size: 12px;
+  pointer-events: none;
+}
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+.hint {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  color: #7790ae;
+  font-size: 11px;
+  background: #07101ccc;
+  padding: 7px 9px;
+  border: 1px solid #1a2a3e;
+  border-radius: 8px;
+  pointer-events: none;
+}
+.side {
+  background: #0b1320;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+  max-height: calc(100vh - 190px);
+}
+.sidehead { padding: 15px; border-bottom: 1px solid var(--line); background: #0e1929; }
+.sidehead h2 { font-size: 14px; margin: 0 0 4px; }
+.sidebody { padding: 14px; overflow: auto; }
+.empty { color: var(--muted); line-height: 1.8; }
+.tag {
+  display: inline-block;
+  border: 1px solid #254b63;
+  background: #102536;
+  color: #71e4ff;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  margin: 2px 4px 2px 0;
+}
+.detail-title { font-size: 16px; font-weight: 700; word-break: break-word; margin: 0 0 12px; }
+.kv { padding: 10px 0; border-bottom: 1px solid #1b2b40; }
+.k { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.v { white-space: pre-wrap; word-break: break-word; }
+.related { margin-top: 15px; }
+.related h3 { font-size: 12px; color: #8fa7c7; font-weight: 600; }
+.related-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #20344d;
+  background: #0d1a2b;
+  color: #dceaff;
+  border-radius: 8px;
+  padding: 9px;
+  margin: 6px 0;
+  cursor: pointer;
+}
+.related-item:hover { border-color: #3bc8ed; }
+.warning { color: var(--orange); font-size: 12px; margin-top: 9px; }
+.error { color: #ff9b9b; }
+@media(max-width:980px) {
+  .layout { grid-template-columns: 1fr; }
+  .graphbox { height: 62vh; min-height: 420px; }
+  .side { max-height: none; min-height: 240px; }
+  .status { width: 100%; margin-left: 0; }
+}
+@media(max-width:600px) {
+  header { padding: 12px; }
+  main { padding: 9px; }
+  .graphbox { height: 58vh; min-height: 360px; }
+  input { flex: 1; min-width: 130px; }
+  .brand .sub { display: none; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">⌘</div>
+    <div>
+      <h1>数据库坤链</h1>
+      <div class="sub">LOCAL KNOWLEDGE GRAPH · 本地关系探索</div>
+    </div>
+  </div>
+  <div class="actions">
+    <a class="btn" href="/">← 返回原查询</a>
+    <button class="btn" id="resetBtn">重置视图</button>
+  </div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <input id="keyword" placeholder="搜索标题、QQ、微信、电话、地点…" autocomplete="off">
+    <button class="btn primary" id="searchBtn">搜索坤谱</button>
+    <button class="btn" id="allBtn">载入最近记录</button>
+    <button class="btn" id="moreBtn" disabled>加载更多</button>
+    <button class="btn" id="expandBtn" disabled>展开当前关联</button>
+    <span class="status" id="status">正在连接本地数据库…</span>
+  </div>
+
+  <div class="layout">
+    <section class="graphbox" id="graphbox">
+      <canvas id="graph"></canvas>
+      <div class="hint">拖动节点 · 滚轮缩放 · 点击节点查看详情</div>
+      <div class="legend">
+        <span><i class="dot" style="background:#5e8cff"></i>数据库记录</span>
+        <span><i class="dot" style="background:#35d8ff"></i>QQ</span>
+        <span><i class="dot" style="background:#b68cff"></i>微信</span>
+        <span><i class="dot" style="background:#5ce1b6"></i>电话</span>
+        <span><i class="dot" style="background:#ffbe6b"></i>地点</span>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="sidehead">
+        <h2>节点信息</h2>
+        <div class="sub">选择节点查看内容，并沿关联链继续展开</div>
+      </div>
+      <div class="sidebody" id="detail">
+        <div class="empty">
+          点击图中的记录节点或字段节点。<br>
+          相同的 QQ、微信、电话或地点会把相关记录连接起来。
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  const canvas = document.getElementById('graph');
+  const ctx = canvas.getContext('2d');
+  const box = document.getElementById('graphbox');
+  const statusEl = document.getElementById('status');
+  const detail = document.getElementById('detail');
+  const keyword = document.getElementById('keyword');
+  const expandBtn = document.getElementById('expandBtn');
+  const moreBtn = document.getElementById('moreBtn');
+
+  const colors = {
+    record: '#5e8cff',
+    QQ: '#35d8ff',
+    wechat: '#b68cff',
+    phone: '#5ce1b6',
+    place: '#ffbe6b'
+  };
+
+  let nodes = [];
+  let edges = [];
+  let selected = null;
+  let dragging = null;
+  let dragMoved = false;
+
+  let scale = 1;
+  let panX = 0;
+  let panY = 0;
+  let pointerStart = null;
+  let simTimer = null;
+
+  let width = 0;
+  let height = 0;
+  let graphToken = 0;
+  let nextCursor = null;
+  let activeKeyword = '';
+
+  const nodeMap = () => new Map(nodes.map(n => [n.id, n]));
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[c]));
+
+  function resize() {
+    const r = box.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    width = r.width;
+    height = r.height;
+
+    canvas.width = Math.max(1, Math.floor(width * dpr));
+    canvas.height = Math.max(1, Math.floor(height * dpr));
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+
+  // 使用螺旋分布初始化节点，避免新节点堆在同一坐标。
+  function seedPositions(newNodes) {
+    const cx = width / 2;
+    const cy = height / 2;
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+
+    newNodes.forEach((n, i) => {
+      if (!Number.isFinite(n.x) || !Number.isFinite(n.y)) {
+        const angle = i * goldenAngle + (Math.random() - 0.5) * 0.3;
+        const radius = 48 + Math.sqrt(i + 1) * 34;
+
+        n.x = cx + Math.cos(angle) * radius;
+        n.y = cy + Math.sin(angle) * radius;
+      }
+
+      if (!Number.isFinite(n.vx)) n.vx = (Math.random() - 0.5) * 0.5;
+      if (!Number.isFinite(n.vy)) n.vy = (Math.random() - 0.5) * 0.5;
+    });
+  }
+
+  function stopSimulation() {
+    if (simTimer !== null) {
+      cancelAnimationFrame(simTimer);
+      simTimer = null;
+    }
+  }
+
+  function mergeGraph(data, isPage = true) {
+    const old = nodeMap();
+    const newIds = [];
+
+    for (const raw of data.nodes || []) {
+      const prior = old.get(raw.id);
+
+      if (prior) {
+        Object.assign(prior, raw);
+        newIds.push(prior.id);
+      } else {
+        const n = {
+          ...raw,
+          x: NaN,
+          y: NaN,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5
+        };
+
+        nodes.push(n);
+        newIds.push(n.id);
+      }
+    }
+
+    const edgeKeys = new Set(
+      edges.map(e => e.source + '>' + e.target)
+    );
+
+    for (const e of data.edges || []) {
+      const key = e.source + '>' + e.target;
+
+      if (!edgeKeys.has(key)) {
+        edges.push({ ...e });
+        edgeKeys.add(key);
+      }
+    }
+
+    seedPositions(nodes);
+
+    if (isPage) {
+      nextCursor = data.next_cursor ?? nextCursor;
+      moreBtn.disabled = !data.has_more;
+    }
+
+    const recordCount = nodes.filter(n => n.type === 'record').length;
+    const fieldCount = nodes.filter(n => n.type === 'field').length;
+
+    statusEl.textContent =
+      `图谱中 ${recordCount} 条记录 · ${fieldCount} 个字段节点` +
+      (isPage && data.has_more ? ' · 还有记录可加载' : '');
+
+    startSimulation();
+    return newIds;
+  }
+
+  function resetGraph(data) {
+    stopSimulation();
+
+    nodes = [];
+    edges = [];
+    selected = null;
+    nextCursor = null;
+    scale = 1;
+    panX = 0;
+    panY = 0;
+
+    mergeGraph(data, true);
+    showEmpty();
+  }
+
+  function showEmpty() {
+    detail.innerHTML = `
+      <div class="empty">
+        点击图中的记录节点或字段节点查看详情。<br>
+        可点击“展开当前关联”沿 QQ、微信、电话和地点继续探索。
+      </div>
+    `;
+
+    expandBtn.disabled = true;
+  }
+
+  async function fetchGraph(url, reset = false, isPage = true) {
+    const token = ++graphToken;
+
+    statusEl.textContent = '正在查询本地 SQLite…';
+    statusEl.classList.remove('error');
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || '查询失败');
+      }
+
+      // 忽略已经过期的请求，防止旧结果覆盖新图谱。
+      if (token !== graphToken) return;
+
+      if (reset) {
+        resetGraph(data);
+      } else {
+        mergeGraph(data, isPage);
+      }
+    } catch (e) {
+      if (token !== graphToken) return;
+
+      statusEl.textContent = '请求失败：' + e.message;
+      statusEl.classList.add('error');
+    }
+  }
+
+  function search() {
+    const q = keyword.value.trim();
+    activeKeyword = q;
+
+    fetchGraph(
+      '/api/graph?keyword=' + encodeURIComponent(q) + '&limit=80',
+      true,
+      true
+    );
+  }
+
+  function nodeRadius(n) {
+    if (n.type !== 'record') return 8;
+
+    const titleLength = String(n.data?.title || '').length;
+    return Math.max(10, Math.min(16, 10 + titleLength / 10));
+  }
+
+  function screen(n) {
+    return {
+      x: (n.x - width / 2) * scale + width / 2 + panX,
+      y: (n.y - height / 2) * scale + height / 2 + panY
+    };
+  }
+
+  function draw() {
+    if (!ctx || !width || !height) return;
+
+    ctx.clearRect(0, 0, width, height);
+
+    // 背景网格。
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.strokeStyle = '#18304b';
+    ctx.lineWidth = 1;
+
+    const gap = 32 * scale;
+
+    if (gap > 10) {
+      const ox = ((panX % gap) + gap) % gap;
+      const oy = ((panY % gap) + gap) % gap;
+
+      ctx.beginPath();
+
+      for (let x = ox; x < width; x += gap) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+      }
+
+      for (let y = oy; y < height; y += gap) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+      }
+
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    const map = nodeMap();
+
+    // 先绘制关系线。
+    ctx.save();
+
+    for (const e of edges) {
+      const a = map.get(e.source);
+      const b = map.get(e.target);
+
+      if (!a || !b) continue;
+
+      const A = screen(a);
+      const B = screen(b);
+      const color = colors[e.field] || '#35506f';
+
+      const active = selected &&
+        (selected.id === a.id || selected.id === b.id);
+
+      ctx.beginPath();
+      ctx.moveTo(A.x, A.y);
+      ctx.lineTo(B.x, B.y);
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = active ? 0.78 : 0.25;
+      ctx.lineWidth = active ? 1.8 : 1;
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = 1;
+
+    // 绘制节点和文字。
+    for (const n of nodes) {
+      const p = screen(n);
+      const r = nodeRadius(n) * Math.min(1.4, Math.max(0.55, scale));
+      const color = n.type === 'record'
+        ? colors.record
+        : (colors[n.field] || colors.QQ);
+
+      const active = selected && selected.id === n.id;
+
+      ctx.save();
+      ctx.shadowBlur = active ? 24 : 12;
+      ctx.shadowColor = color;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r + (active ? 3 : 0), 0, Math.PI * 2);
+      ctx.fillStyle = n.type === 'record' ? '#101e39' : '#0a1a26';
+      ctx.fill();
+
+      ctx.lineWidth = active ? 2.5 : 1.5;
+      ctx.strokeStyle = color;
+      ctx.stroke();
+      ctx.restore();
+
+      const label = n.type === 'record'
+        ? (n.label || '记录')
+        : `${n.field_label || n.field} · ${n.label || n.value}`;
+
+      if (scale > 0.62 || n.type === 'field' || active) {
+        ctx.font =
+          `${active ? '600 ' : ''}${n.type === 'record' ? 11 : 10}px ` +
+          '"Segoe UI","Microsoft YaHei",sans-serif';
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = active
+          ? '#ffffff'
+          : (n.type === 'record' ? '#b8c9e8' : '#c0d4e5');
+
+        const lines = String(label).split('\n').slice(0, 2);
+
+        lines.forEach((line, i) => {
+          const text = line.length > 30
+            ? line.slice(0, 29) + '…'
+            : line;
+
+          ctx.fillText(text, p.x, p.y + r + 5 + i * 13);
+        });
+      }
+    }
+
+    ctx.restore();
+  }
+
+  // 自由漂浮布局：
+  // 1. 节点互相排斥，避免重叠。
+  // 2. 关系线产生较弱的连接力。
+  // 3. 阻尼让节点逐渐平稳，而不是无限抖动。
+  // 4. 节点不会被强行吸到同一个中心点。
+  function startSimulation() {
+    stopSimulation();
+
+    if (nodes.length === 0) {
+      draw();
+      return;
+    }
+
+    let ticks = 0;
+
+    // 节点过多时关闭全量两两排斥，防止计算量过大。
+    const repulsionEnabled = nodes.length <= 900;
+    const maxTicks = nodes.length <= 180 ? 260 : 120;
+
+    const tick = () => {
+      const map = nodeMap();
+
+      if (repulsionEnabled) {
+        for (let i = 0; i < nodes.length; i++) {
+          const a = nodes[i];
+
+          for (let j = i + 1; j < nodes.length; j++) {
+            const b = nodes[j];
+
+            let dx = a.x - b.x;
+            let dy = a.y - b.y;
+            let d2 = dx * dx + dy * dy;
+
+            // 两节点完全重合时，给一个随机方向。
+            if (d2 < 0.01) {
+              dx = (Math.random() - 0.5) * 4;
+              dy = (Math.random() - 0.5) * 4;
+              d2 = dx * dx + dy * dy;
+            }
+
+            const d = Math.sqrt(d2);
+
+            // 记录节点与字段节点都保持足够间隔。
+            const minGap =
+              a.type === 'record' && b.type === 'record'
+                ? 76
+                : 58;
+
+            let force;
+
+            if (d < minGap) {
+              force = (minGap - d) * 0.12;
+            } else {
+              // 远距离排斥更弱，避免图谱无限扩张。
+              force = Math.min(0.12, 500 / (d2 + 1000));
+            }
+
+            const fx = dx / d * force;
+            const fy = dy / d * force;
+
+            a.vx += fx;
+            a.vy += fy;
+            b.vx -= fx;
+            b.vy -= fy;
+          }
+        }
+      }
+
+      // 关联节点之间保持适当距离。
+      for (const e of edges) {
+        const a = map.get(e.source);
+        const b = map.get(e.target);
+
+        if (!a || !b) continue;
+
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        const d = Math.sqrt(dx * dx + dy * dy) || 1;
+
+        const target = 135;
+        const force = (d - target) * 0.001;
+
+        const fx = dx * force;
+        const fy = dy * force;
+
+        a.vx += fx;
+        a.vy += fy;
+        b.vx -= fx;
+        b.vy -= fy;
+      }
+
+      // 更新位置。
+      for (const n of nodes) {
+        if (n === dragging) continue;
+
+        // 只施加非常轻的中心约束，防止节点漂得太远。
+        n.vx += (width / 2 - n.x) * 0.00008;
+        n.vy += (height / 2 - n.y) * 0.00008;
+
+        // 限制速度，并施加阻尼。
+        n.vx = Math.max(-5, Math.min(5, n.vx)) * 0.80;
+        n.vy = Math.max(-5, Math.min(5, n.vy)) * 0.80;
+
+        n.x += n.vx;
+        n.y += n.vy;
+      }
+
+      draw();
+
+      ticks++;
+
+      if (ticks < maxTicks) {
+        simTimer = requestAnimationFrame(tick);
+      } else {
+        simTimer = null;
+      }
+    };
+
+    simTimer = requestAnimationFrame(tick);
+  }
+
+  function hitTest(x, y) {
+    for (let i = nodes.length - 1; i >= 0; i--) {
+      const n = nodes[i];
+      const p = screen(n);
+      const r = nodeRadius(n) + 9;
+
+      if ((p.x - x) ** 2 + (p.y - y) ** 2 < r * r) {
+        return n;
+      }
+    }
+
+    return null;
+  }
+
+  function kv(k, v) {
+    return `
+      <div class="kv">
+        <div class="k">${esc(k)}</div>
+        <div class="v">${esc(v || '—')}</div>
+      </div>
+    `;
+  }
+
+  function showNode(n) {
+    selected = n;
+    draw();
+
+    expandBtn.disabled = false;
+
+    if (n.type === 'record') {
+      const d = n.data || {};
+
+      detail.innerHTML = `
+        <div class="tag">记录节点 #${esc(n.record_id)}</div>
+        <div class="detail-title">${esc(d.title || '未命名记录')}</div>
+        ${kv('价格', d.price)}
+        ${kv('地点', d.place)}
+        ${kv('QQ', d.QQ)}
+        ${kv('微信', d.wechat)}
+        ${kv('电话', d.phone)}
+
+        <div class="related">
+          <h3>关系字段</h3>
+
+          ${
+            ['QQ', 'wechat', 'phone', 'place']
+              .filter(f => String(d[f] ?? '').trim())
+              .map(f => `
+                <button
+                  class="related-item"
+                  data-field="${esc(f)}"
+                  data-value="${esc(d[f])}">
+                  ${esc(({QQ:'QQ', wechat:'微信', phone:'电话', place:'地点'})[f])}：
+                  ${esc(d[f])} ↗
+                </button>
+              `).join('')
+            || '<div class="empty">这条记录没有可用的关联字段。</div>'
+          }
+
+          <div class="warning">
+            点击上面的字段，可查看共享该值的其他记录。
+          </div>
+        </div>
+      `;
+
+      detail.querySelectorAll('[data-field]').forEach(button => {
+        button.addEventListener('click', () => {
+          expandField(button.dataset.field, button.dataset.value);
+        });
+      });
+
+    } else {
+      detail.innerHTML = `
+        <div class="tag">关联字段节点</div>
+        <div class="detail-title">
+          ${esc(n.field_label || n.field)}：${esc(n.value)}
+        </div>
+
+        <div class="empty">
+          所有具有相同${esc(n.field_label || n.field)}值的记录
+          都会连接到此节点。
+        </div>
+
+        <button class="btn primary"
+                style="margin-top:14px;width:100%"
+                id="fieldExpand">
+          展开关联记录
+        </button>
+      `;
+
+      document.getElementById('fieldExpand').onclick = () => {
+        expandField(n.field, n.value);
+      };
+    }
+  }
+
+  async function expandField(field, value) {
+    await fetchGraph(
+      '/api/graph/expand?field=' +
+      encodeURIComponent(field) +
+      '&value=' +
+      encodeURIComponent(value) +
+      '&limit=60',
+      false,
+      false
+    );
+
+    const n = nodes.find(
+      item => item.type === 'field' &&
+              item.field === field &&
+              item.value === value
+    );
+
+    if (n) showNode(n);
+  }
+
+  async function expandCurrent() {
+    if (!selected) return;
+
+    if (selected.type === 'record') {
+      await fetchGraph(
+        '/api/graph/expand?record_id=' +
+        encodeURIComponent(selected.record_id) +
+        '&limit=60',
+        false,
+        false
+      );
+    } else {
+      await expandField(selected.field, selected.value);
+    }
+  }
+
+  // 鼠标操作：拖节点、移动画布。
+  canvas.addEventListener('pointerdown', e => {
+    const r = canvas.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+
+    pointerStart = {
+      x,
+      y,
+      px: e.clientX,
+      py: e.clientY,
+      panX,
+      panY
+    };
+
+    dragging = hitTest(x, y);
+    dragMoved = false;
+
+    canvas.setPointerCapture(e.pointerId);
+  });
+
+  canvas.addEventListener('pointermove', e => {
+    if (!pointerStart) return;
+
+    const r = canvas.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+
+    if (dragging) {
+      if (
+        Math.abs(e.clientX - pointerStart.px) +
+        Math.abs(e.clientY - pointerStart.py) > 3
+      ) {
+        dragMoved = true;
+      }
+
+      dragging.x = (x - width / 2 - panX) / scale + width / 2;
+      dragging.y = (y - height / 2 - panY) / scale + height / 2;
+      dragging.vx = 0;
+      dragging.vy = 0;
+
+      draw();
+
+    } else if (e.buttons) {
+      panX = pointerStart.panX + (e.clientX - pointerStart.px);
+      panY = pointerStart.panY + (e.clientY - pointerStart.py);
+
+      draw();
+    }
+  });
+
+  canvas.addEventListener('pointerup', () => {
+    if (dragging && !dragMoved) {
+      showNode(dragging);
+    }
+
+    if (dragMoved) {
+      startSimulation();
+    }
+
+    dragging = null;
+    pointerStart = null;
+  });
+
+  canvas.addEventListener('pointercancel', () => {
+    dragging = null;
+    pointerStart = null;
+  });
+
+  // 鼠标滚轮缩放。
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+
+    scale = Math.max(
+      0.35,
+      Math.min(2.5, scale * (e.deltaY < 0 ? 1.1 : 0.9))
+    );
+
+    draw();
+  }, { passive: false });
+
+  // 搜索图谱。
+  document.getElementById('searchBtn').onclick = search;
+
+  document.getElementById('allBtn').onclick = () => {
+    keyword.value = '';
+    activeKeyword = '';
+
+    fetchGraph('/api/graph?limit=80', true, true);
+  };
+
+  // 分页加载时只更新分页游标，不覆盖关联展开结果。
+  moreBtn.onclick = () => {
+    if (nextCursor === null) return;
+
+    const url =
+      '/api/graph?limit=80' +
+      '&cursor=' + encodeURIComponent(nextCursor) +
+      '&keyword=' + encodeURIComponent(activeKeyword);
+
+    fetchGraph(url, false, true);
+  };
+
+  document.getElementById('expandBtn').onclick = expandCurrent;
+
+  document.getElementById('resetBtn').onclick = () => {
+    scale = 1;
+    panX = 0;
+    panY = 0;
+    draw();
+  };
+
+  keyword.addEventListener('keydown', e => {
+    if (e.key === 'Enter') search();
+  });
+
+  window.addEventListener('resize', resize);
+
+resize();
+
+// 支持从查询卡片直接打开对应的记忆链
+(async function initFromCard() {
+    const params = new URLSearchParams(window.location.search);
+
+    const field = params.get("field") || "";
+    const value = params.get("value") || "";
+    const q = params.get("keyword") || "";
+
+    // 卡片传入了关键字段和值
+    if (
+        field &&
+        value &&
+        ["QQ", "wechat", "phone", "place"].includes(field)
+    ) {
+        keyword.value = value;
+        activeKeyword = value;
+
+        // 直接查询共享该关键数据的记录
+        await fetchGraph(
+            "/api/graph/expand?field=" +
+            encodeURIComponent(field) +
+            "&value=" +
+            encodeURIComponent(value) +
+            "&limit=60",
+            true,
+            true
+        );
+
+        // 自动选中对应的关键字段节点
+        const target = nodes.find(n =>
+            n.type === "field" &&
+            n.field === field &&
+            n.value === value
+        );
+
+        if (target) {
+            showNode(target);
+        }
+
+        return;
+    }
+
+    // 没有联系方式时，按标题关键词查询
+    if (q) {
+        keyword.value = q;
+        activeKeyword = q;
+
+        await fetchGraph(
+            "/api/graph?keyword=" +
+            encodeURIComponent(q) +
+            "&limit=80",
+            true,
+            true
+        );
+
+        return;
+    }
+
+    // 正常打开图谱时，加载最近记录
+    fetchGraph("/api/graph?limit=80", true, true);
+})();
+})();
+</script>
+</body>
+</html>
